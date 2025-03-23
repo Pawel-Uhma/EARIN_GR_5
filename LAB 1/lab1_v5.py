@@ -6,9 +6,15 @@ def function(x, y):
     return 2*np.sin(x)+3*np.cos(y)
 
 def function_der_fx(x):
+    """ 
+    derivative of F(X,Y) with respect to Y
+    """
     return 2*np.cos(x)
 
 def function_der_fy(y):
+    """ 
+    derivative of F(X,Y) with respect to X
+    """
     return -3 * np.sin(y) 
 
 def next_x(x,learning_rate):
@@ -18,6 +24,9 @@ def next_y(y, learning_rate):
     return y - function_der_fy(y) * learning_rate
 
 def next_point(point,learning_rate):
+    """
+    Combining next x guess and next Y guess into a 2d point
+    """
     return [next_x(point[0],learning_rate),next_y(point[1],learning_rate)]
 
 def gradient_descent(initial_guess, learning_rate, tol=1e-6, max_iter=1000):
@@ -25,9 +34,9 @@ def gradient_descent(initial_guess, learning_rate, tol=1e-6, max_iter=1000):
     Gradient descent algorithm
     
     Parameters:
-    - initial_guess: initial 2D coordinate vector
-    - learning_rate: learning rate
-    - tol: tolerance, convergence criteria
+    - initial_guess
+    - learning_rate
+    - tol: tolerance
     - max_iter: maximum number of iterations
 
     """
@@ -40,7 +49,6 @@ def gradient_descent(initial_guess, learning_rate, tol=1e-6, max_iter=1000):
         new_guess = next_point(guess,learning_rate)
         diff = abs(function(guess[0],guess[1]) - function(new_guess[0],new_guess[1]))
         path.append(new_guess)
-        print(new_guess, diff)
         guess = new_guess
 
     return guess, iterations, np.array(path)
@@ -48,13 +56,10 @@ def gradient_descent(initial_guess, learning_rate, tol=1e-6, max_iter=1000):
 
 def visualize(path):
     """
-    Visualization function: creates 3D plot of the function. Use colors to show the Z-coordinate
+    Creates 3D plot of the function
     """
-    #ADjust the range to see a bigger chunk of the plot
-    range = 4
-    x0, y0 = path[0]
-    x = np.linspace(x0 - range, x0 + range, 100)
-    y = np.linspace(y0 - range, y0 + range, 100)
+    x = np.linspace(-5, 5, 100)
+    y = np.linspace(-5 , 5, 100)
     X, Y = np.meshgrid(x, y)
     Z = function(X, Y)
     fig = plt.figure(figsize=(10, 8))
@@ -75,11 +80,67 @@ def visualize(path):
     
     plt.show()
 
+def visualize_multiple(initial_points, learning_rates, tol=1e-6, max_iter=1000):
+    """
+    Run gradient descent for each (initial_point, learning_rate) pair,
+    and visualize all paths on the same 3D grid
+
+    Parameters:
+    - initial_points: 2d list of 2d points
+    - learning_rates: 2d list corresponding to each initial point
+    - tol: tolerance
+    - max_iter: maximum number of iterations 
+    """
+    if len(initial_points) != len(learning_rates):
+        raise ValueError("initial_points and learning_rates must have the same length")
+
+    # calculate the grid range 
+    xs = [pt[0] for pt in initial_points]
+    ys = [pt[1] for pt in initial_points]
+    x_min, x_max = min(xs) - 3, max(xs) + 3
+    y_min, y_max = min(ys) - 3, max(ys) + 3
+
+    # create grid
+    x = np.linspace(x_min, x_max, 100)
+    y = np.linspace(y_min, y_max, 100)
+    X, Y = np.meshgrid(x, y)
+    Z = function(X, Y)
+
+    fig = plt.figure(figsize=(10, 8))
+    ax = fig.add_subplot(111, projection='3d')
+    ax.plot_surface(X, Y, Z, cmap=cm.viridis, alpha=0.6)
+
+    # colors for different initial points
+    colors = ['red', 'green', 'blue', 'orange', 'purple', 'brown'][:len(initial_points)]
+
+    for idx, (initial, lr) in enumerate(zip(initial_points, learning_rates)):
+        minimum, iterations, path = gradient_descent(initial, lr, tol=tol, max_iter=max_iter)
+        path = np.array(path)
+        x_path = path[:, 0]
+        y_path = path[:, 1]
+        z_path = function(x_path, y_path)
+        
+        ax.plot(x_path, y_path, z_path, color=colors[idx], linestyle='--',
+                marker='o', label=f"{initial}, lr {lr}")
+        
+    
+    ax.set_title("Gradient Descent Paths")
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    ax.set_zlabel("f(x,y)")
+    ax.legend()
+    plt.show()
 
 
-initial_guess_1 = [1.0, 2.0]
-learning_rate_1 = 0.1
-minimum_1, iterations_1, path = gradient_descent(initial_guess_1, learning_rate_1)
+
+#MAIN ALGORITHM
+initial_point = [1,2]
+learning_rate = 0.1
+minimum, iterations, path = gradient_descent(initial_point,learning_rate)
+print(f"Minimum approximation with initial guess {initial_point}: {minimum}, Iterations: {iterations}")
 visualize(path)
 
-print(f"Minimum approximation with initial guess {initial_guess_1}: {minimum_1}, Iterations: {iterations_1}")
+# TESTING MULTIPLE POINTS
+initial_points = [[1, 0.1], [0, 0], [-2, -1], [0, 3]]
+learning_rates = [0.5, 0.2, 0.4, 0.3]
+visualize_multiple(initial_points, learning_rates)
