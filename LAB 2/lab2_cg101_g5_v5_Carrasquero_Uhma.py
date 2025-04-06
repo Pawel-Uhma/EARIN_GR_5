@@ -99,7 +99,7 @@ def solve_case(test_case:dict):
 
 
 # solve_case(test_case_1)
-# solve_case(test_case_2)
+solve_case(test_case_2)
 # solve_case(test_case_3)
-solve_case(test_case_4)
+# solve_case(test_case_4)
 
