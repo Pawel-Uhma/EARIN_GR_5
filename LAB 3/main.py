@@ -1,5 +1,6 @@
 from genetic_algorithm import GeneticAlgorithm
 from plotting import plot_results
+from test_cases import crossover_tests, mutation_rate_tests, mutation_strength_tests
 
 def run_test_case(test_id, population_size, mutation_rate, mutation_strength, crossover_rate, num_generations, seed):
     print(f"\n{'='*40}\nRunning test case {test_id}")
@@ -24,37 +25,11 @@ def run_test_case(test_id, population_size, mutation_rate, mutation_strength, cr
     return best_solutions, best_fitness_values, average_fitness_values
 
 def main():
-    test_cases = [
-        {
-            "test_id": 1,
-            "population_size": 100,
-            "mutation_rate": 0.1,
-            "mutation_strength": 0.5,
-            "crossover_rate": 0.6,
-            "num_generations": 100,
-            "seed": 14,
-        },
-        {
-            "test_id": 2,
-            "population_size": 100,
-            "mutation_rate": 0.1,
-            "mutation_strength": 0.1,
-            "crossover_rate": 0.05,
-            "num_generations": 100,
-            "seed": 42,
-        },
-        {
-            "test_id": 3,
-            "population_size": 100,
-            "mutation_rate": 0.1,
-            "mutation_strength": 0.3,
-            "crossover_rate": 1,
-            "num_generations": 100,
-            "seed": 23,
-        },
-    ]
-    
-    for tc in test_cases:
+    # MODIFY THIS PART FOR DIFFERENT TEST CASES 
+    # choose: crossover_tests, mutation_rate_tests, mutation_strength_tests
+    test_cases_group = mutation_strength_tests
+
+    for tc in test_cases_group["test_cases"]:
         best_solutions, best_fitness_values, average_fitness_values = run_test_case(
             test_id=tc["test_id"],
             population_size=tc["population_size"],
