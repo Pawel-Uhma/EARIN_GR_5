@@ -112,8 +112,6 @@ class GeneticAlgorithm:
             children = self.crossover(parents_for_reproduction)
             children = self.mutate(children)
             
-            # MODIFY THIS
-            # make is so that each children is replacing a random individual in a population
             indices = np.random.choice(range(len(population)), size=len(children), replace=False)
             for i, child in zip(indices, children):
                 population[i] = child

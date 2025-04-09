@@ -27,7 +27,7 @@ def run_test_case(test_id, population_size, mutation_rate, mutation_strength, cr
 def main():
     # MODIFY THIS PART FOR DIFFERENT TEST CASES 
     # choose: crossover_tests, mutation_rate_tests, mutation_strength_tests
-    test_cases_group = mutation_strength_tests
+    test_cases_group = crossover_tests
 
     for tc in test_cases_group["test_cases"]:
         best_solutions, best_fitness_values, average_fitness_values = run_test_case(
