@@ -2,7 +2,7 @@ crossover_tests = {
         "test_cases": [
             {
                 "test_id": 1,
-                "population_size": 100,
+                "population_size": 1000,
                 "mutation_rate": 0.1,
                 "mutation_strength": 0.5,
                 "crossover_rate": 0.4,
@@ -89,6 +89,56 @@ mutation_strength_tests = {
                 "mutation_rate": 0.1,
                 "mutation_strength": 0.9,
                 "crossover_rate": 0.6,
+                "num_generations": 100,
+                "seed": 42,
+            },
+        ]
+    }
+population_tests = {
+        "group": "population",
+        "test_cases": [
+            {
+                "test_id": 1,
+                "population_size": 20,
+                "mutation_rate": 0.1,
+                "mutation_strength": 0.5,
+                "crossover_rate": 0.8,
+                "num_generations": 100,
+                "seed": 42,
+            },
+            {
+                "test_id": 2,
+                "population_size": 100,
+                "mutation_rate": 0.1,
+                "mutation_strength": 0.5,
+                "crossover_rate": 0.8,
+                "num_generations": 100,
+                "seed": 42,
+            },
+            {
+                "test_id": 3,
+                "population_size": 1000,
+                "mutation_rate": 0.1,
+                "mutation_strength": 0.5,
+                "crossover_rate": 0.8,
+                "num_generations": 100,
+                "seed": 42,
+            },
+            {
+                "test_id": 4,
+                "population_size": 10000,
+                "mutation_rate": 0.1,
+                "mutation_strength": 0.5,
+                "crossover_rate": 0.8,
+                "num_generations": 100,
+                "seed": 42,
+            },
+            {
+                "test_id": 5,
+                "population_size": 50000,
+                "mutation_rate": 0.1,
+                "mutation_strength": 0.5,
+                "crossover_rate": 0.8,
                 "num_generations": 100,
                 "seed": 42,
             },

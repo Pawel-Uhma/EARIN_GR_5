@@ -2,6 +2,11 @@ import random
 import numpy as np
 from functions import *
 
+#some approximation of global fitness
+styblinski_tang_global_minimum = (-78.3323)
+# allowed closeness to the global minimum
+tolerance = abs(0.03 * styblinski_tang_global_minimum)  
+
 def set_seed(seed: int) -> None:
     # Set fixed random seed to make the results reproducible
     random.seed(seed)
@@ -99,15 +104,21 @@ class GeneticAlgorithm:
         best_solutions = []
         best_fitness_values = []
         average_fitness_values = []
-
+        convergence_generation = None
+        
         for generation in range(self.num_generations):
             fitness_values = self.evaluate_population(population)
             
             best_idx = np.argmin(fitness_values)
             best_solutions.append(population[best_idx])
             best_fitness_values.append(fitness_values[best_idx])
-            average_fitness_values.append(np.average(fitness_values))
+            avg_fitness = np.average(fitness_values)
+            average_fitness_values.append(avg_fitness)
             
+            # check if the average fitness is close enough to the known global minimum
+            if abs(avg_fitness - styblinski_tang_global_minimum) < tolerance and convergence_generation is None:
+                convergence_generation = generation + 1  # +1 so that counting starts at 1
+
             parents_for_reproduction = self.selection(population, fitness_values)
             children = self.crossover(parents_for_reproduction)
             children = self.mutate(children)
@@ -115,5 +126,9 @@ class GeneticAlgorithm:
             indices = np.random.choice(range(len(population)), size=len(children), replace=False)
             for i, child in zip(indices, children):
                 population[i] = child
-            
-        return best_solutions, best_fitness_values, average_fitness_values
+
+        if convergence_generation is None:
+            convergence_generation = self.num_generations
+
+        return best_solutions, best_fitness_values, average_fitness_values, convergence_generation
+
