@@ -13,21 +13,28 @@ from datasets import load_dataset
 DATASET = "wine"
 
 def set_seed(seed):
+    # make everything reproducible
     random.seed(seed)
     np.random.seed(seed)
 
 def load_and_preprocess_data(seed):
+    # load wine data and normalize it
     X, y = load_dataset(DATASET)
+
+    # grab feature names from dataframe if possible
     if hasattr(X, "columns"):
         feature_names = X.columns.tolist()
         X = X.values
     else:
         feature_names = [f"feature_{i}" for i in range(X.shape[1])]
+
+    # standard scaling makes a lot of models happier
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
     return X_scaled, y, feature_names
 
 def plot_pre_training_data(X, y):
+    # use PCA to plot 2D version of data before training
     pca = PCA(n_components=2)
     X_pca = pca.fit_transform(X)
     plt.figure(figsize=(8, 6))
@@ -44,6 +51,7 @@ def plot_pre_training_data(X, y):
     plt.close()
 
 def plot_feature_importances(importances, feature_names, title, filename):
+    # show which features were most important for the model
     indices = np.argsort(importances)[::-1]
     sorted_features = [feature_names[i] for i in indices]
     sorted_importances = importances[indices]
@@ -58,6 +66,7 @@ def plot_feature_importances(importances, feature_names, title, filename):
     plt.close()
 
 def plot_confusion_matrix(cm, class_names, title, filename):
+    # classic confusion matrix heatmap
     plt.figure(figsize=(6, 5))
     plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
     plt.title(title)
@@ -77,8 +86,11 @@ def plot_confusion_matrix(cm, class_names, title, filename):
     plt.close()
 
 def evaluate_model(model, X_test, y_test):
+    # get predictions and accuracy
     predictions = model.predict(X_test)
     acc = accuracy_score(y_test, predictions)
+
+    # plot confusion matrix
     cm = confusion_matrix(y_test, predictions)
     class_names = [f'Class {i}' for i in np.unique(y_test)]
     plot_confusion_matrix(cm, class_names, f"Confusion Matrix: {model.__class__.__name__}",
@@ -86,6 +98,7 @@ def evaluate_model(model, X_test, y_test):
     return acc, predictions
 
 def plot_test_pca_with_predictions(X_test, y_test, predictions, best_model_name):
+    # pca visualization of test data with predicted labels
     pca = PCA(n_components=2)
     X_test_pca = pca.fit_transform(X_test)
     plt.figure(figsize=(8, 6))
@@ -107,17 +120,33 @@ def plot_test_pca_with_predictions(X_test, y_test, predictions, best_model_name)
 def main():
     set_seed(0)
     os.makedirs("./plots", exist_ok=True)
+
+    # get the data ready
     X, y, feature_names = load_and_preprocess_data(0)
+
+    # visualize data before training
     plot_pre_training_data(X, y)
+
+    # 80/20 split for training and test sets
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+
+    # try two models: one simple tree, one ensemble
     model_dt = DecisionTreeClassifier(max_depth=4, random_state=0)
     model_rf = RandomForestClassifier(n_estimators=100, random_state=0)
+
+    # get cv scores
     scores_dt = cross_val_score(model_dt, X_train, y_train, cv=4, scoring='accuracy')
     scores_rf = cross_val_score(model_rf, X_train, y_train, cv=4, scoring='accuracy')
+
+    # train on full training set
     final_model_dt = model_dt.fit(X_train, y_train)
     final_model_rf = model_rf.fit(X_train, y_train)
+
+    # test accuracy and confusion matrices
     acc_dt, _ = evaluate_model(final_model_dt, X_test, y_test)
     acc_rf, _ = evaluate_model(final_model_rf, X_test, y_test)
+
+    # visualize which features the models focused on
     if hasattr(final_model_dt, "feature_importances_"):
         plot_feature_importances(final_model_dt.feature_importances_, feature_names,
                                  "Decision Tree Feature Importances",
@@ -126,6 +155,8 @@ def main():
         plot_feature_importances(final_model_rf.feature_importances_, feature_names,
                                  "Random Forest Feature Importances",
                                  "RandomForest_feature_importances.png")
+
+    # pick the better model for final visualization
     best_model = final_model_dt if acc_dt >= acc_rf else final_model_rf
     best_model_name = best_model.__class__.__name__
     _, best_predictions = evaluate_model(best_model, X_test, y_test)
