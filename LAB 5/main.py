@@ -71,7 +71,7 @@ def run(cfg: dict, *, epochs: int | None = None, log: bool = False):
         if log:
             print(f'[EPOCH {ep + 1:02d}/{n_epochs}] Training…')
         for s in range(0, len(Xt), cfg['bs']):
-            xb, yb = Xt[s:s + cfg['bs']], Yt[s:s + cfg['bs']]
+            xb, yb = Xt[s:s + cfg['bs']], Yt[s:s + cfg['bs']] #random batches
             loss = lossfn(net(xb), yb)
             opt.zero_grad()
             loss.backward()
