@@ -4,8 +4,6 @@ import matplotlib.pyplot as plt
 import os       
 import time
 
-
-# global constants for our experiment settings
 _BATCH = 100            # how many episodes to average in each data point
 _EPISODES = 20000       # total episodes to run for each experiment
 _TRIALS = 1000          # number of evaluation trials to run
