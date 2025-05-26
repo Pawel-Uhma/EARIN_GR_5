@@ -12,7 +12,7 @@ MODEL_DIR  = os.path.join(OUTPUT_DIR, "models")
 
 IMG_SIZE      = 64
 BATCH_SIZE    = 32
-NUM_EPOCHS    = 20
+NUM_EPOCHS    = 5
 LEARNING_RATE = 1e-4
 VAL_SPLIT     = 0.2
 RANDOM_SEED   = 42
