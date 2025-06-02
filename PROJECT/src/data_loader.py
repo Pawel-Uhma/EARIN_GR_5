@@ -1,62 +1,102 @@
 # data_loader.py
-import os
-import pandas as pd
-import torch
-from torch.utils.data import Dataset, DataLoader, Subset
-from PIL import Image
-from sklearn.model_selection import train_test_split
-import torchvision.transforms.functional as TF
 
-class AgeDataset(Dataset):
-    def __init__(self, csv_file, image_dir):
-        self.df = pd.read_csv(csv_file)
+import os
+import torch
+from torch.utils.data import Dataset, DataLoader, random_split
+from PIL import Image
+from torchvision import transforms
+from config import IMAGE_DIR, BATCH_SIZE, VAL_SPLIT, RANDOM_SEED, IMG_SIZE
+import pandas as pd
+
+class AgeRegressionDataset(Dataset):
+    def __init__(self, image_dir, transform=None):
         self.image_dir = image_dir
-        # Map labels to integers
-        self.label_map = {"YOUNG": 0, "MIDDLE": 1, "OLD": 2}
+        self.transform = transform
+        self.samples = []
+
+        for fname in os.listdir(image_dir):
+            if not fname.lower().endswith('.jpg'):
+                continue
+
+            parts = fname.split('_', 3)
+            # We expect at least: age, gender, race, rest_of_name
+            if len(parts) < 4:
+                # Skip any file that doesn't follow the expected naming
+                continue
+
+            # Try to parse age, gender, race
+            try:
+                age = float(parts[0])
+                gender = int(parts[1])   # 0 or 1
+                race   = int(parts[2])   # 0–4
+            except ValueError:
+                # Skip if any of the first three parts are not integers
+                continue
+
+            path = os.path.join(image_dir, fname)
+            self.samples.append((path, age))
+
 
     def __len__(self):
-        return len(self.df)
+        return len(self.samples)
 
     def __getitem__(self, idx):
-        row = self.df.iloc[idx]
-        img_name = row['ID']
-        label_str = row['Class']
-        img_path = os.path.join(self.image_dir, img_name)
-        # Load image
-        image = Image.open(img_path).convert("RGB")
-        # Convert to tensor
-        image = TF.to_tensor(image)
-        label = self.label_map[label_str]
-        return image, label
+        path, age = self.samples[idx]
+        img = Image.open(path).convert('RGB')
+
+        if self.transform:
+            img = self.transform(img)
+
+        return img, torch.tensor(age, dtype=torch.float32)
 
 
-def get_dataloaders(csv_file, image_dir, batch_size, val_split, seed):
-    # Create full dataset
-    full_dataset = AgeDataset(csv_file, image_dir)
-    # Split indices for train/validation
-    indices = list(range(len(full_dataset)))
-    # Stratify by class label
-    stratify_labels = full_dataset.df['Class']
-    train_idx, val_idx = train_test_split(
-        indices,
-        test_size=val_split,
-        random_state=seed,
-        stratify=stratify_labels
+def get_regression_transform():
+    """
+    Basic transform: resize to IMG_SIZE × IMG_SIZE, convert to tensor,
+    normalize with ImageNet statistics.
+    """
+    return transforms.Compose([
+        transforms.Resize((IMG_SIZE, IMG_SIZE)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                             std=[0.229, 0.224, 0.225]),
+    ])
+
+
+def get_dataloaders():
+    """
+    Build DataLoader objects for training and validation splits.
+    Splits the dataset by VAL_SPLIT fraction.
+    """
+    # Instantiate full dataset with transforms
+    full_dataset = AgeRegressionDataset(
+        image_dir=IMAGE_DIR,
+        transform=get_regression_transform()
     )
-    # Create subsets
-    train_set = Subset(full_dataset, train_idx)
-    val_set = Subset(full_dataset, val_idx)
-    # DataLoaders
+
+    # Compute sizes
+    total_len = len(full_dataset)
+    val_len   = int(total_len * VAL_SPLIT)
+    train_len = total_len - val_len
+
+    # Perform reproducible split
+    train_ds, val_ds = random_split(
+        full_dataset,
+        [train_len, val_len],
+        generator=torch.Generator().manual_seed(RANDOM_SEED)
+    )
+
     train_loader = DataLoader(
-        train_set,
-        batch_size=batch_size,
+        train_ds,
+        batch_size=BATCH_SIZE,
         shuffle=True,
         num_workers=os.cpu_count()
     )
     val_loader = DataLoader(
-        val_set,
-        batch_size=batch_size,
+        val_ds,
+        batch_size=BATCH_SIZE,
         shuffle=False,
         num_workers=os.cpu_count()
     )
+
     return train_loader, val_loader

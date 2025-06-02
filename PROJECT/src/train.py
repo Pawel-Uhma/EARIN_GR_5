@@ -1,58 +1,53 @@
-import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from tqdm import tqdm
-from config import *
+from config import NUM_EPOCHS, LEARNING_RATE, MODEL_DIR
 from data_loader import get_dataloaders
-from models.resnet18 import build_resnet18
-from utils import set_seed
+from models.resnet18 import build_resnet18_regression
+from utils import set_seed, get_regression_transform
 
 
 def train():
-    set_seed(RANDOM_SEED)
-    train_loader, val_loader = get_dataloaders(
-        CSV_FILE, RAW_DIR, BATCH_SIZE, VAL_SPLIT, RANDOM_SEED
-    )
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = build_resnet18(pretrained=True).to(device)
-    criterion = nn.CrossEntropyLoss()
+    set_seed()
+    train_loader, val_loader = get_dataloaders(transform=get_regression_transform())
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model = build_resnet18_regression(pretrained=True).to(device)
+    criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
-    best_acc = 0.0
+    best_loss = float('inf')
     for epoch in range(NUM_EPOCHS):
         model.train()
-        running_loss = 0.0
-        for images, labels in tqdm(train_loader, desc=f"Training Epoch {epoch+1}"):
-            images, labels = images.to(device), labels.to(device)
+        train_loss = 0.0
+        for imgs, ages in tqdm(train_loader, desc=f"Epoch {epoch+1}/{NUM_EPOCHS}" ):
+            imgs, ages = imgs.to(device), ages.to(device).unsqueeze(1)
             optimizer.zero_grad()
-            outputs = model(images)
-            loss = criterion(outputs, labels)
+            outputs = model(imgs)
+            loss = criterion(outputs, ages)
             loss.backward()
             optimizer.step()
-            running_loss += loss.item() * images.size(0)
-        epoch_loss = running_loss / len(train_loader.dataset)
+            train_loss += loss.item() * imgs.size(0)
+        train_loss /= len(train_loader.dataset)
 
-        # Validation
+        # validation
         model.eval()
-        correct, total = 0, 0
+        val_loss = 0.0
         with torch.no_grad():
-            for images, labels in val_loader:
-                images, labels = images.to(device), labels.to(device)
-                outputs = model(images)
-                _, preds = torch.max(outputs, 1)
-                correct += (preds == labels).sum().item()
-                total += labels.size(0)
-        val_acc = correct / total
-        print(f"Epoch {epoch+1}/{NUM_EPOCHS} - Loss: {epoch_loss:.4f} - Val Acc: {val_acc:.4f}")
+            for imgs, ages in val_loader:
+                imgs, ages = imgs.to(device), ages.to(device).unsqueeze(1)
+                outputs = model(imgs)
+                loss = criterion(outputs, ages)
+                val_loss += loss.item() * imgs.size(0)
+        val_loss /= len(val_loader.dataset)
 
-        # Save best model
-        if val_acc > best_acc:
-            best_acc = val_acc
-            save_path = os.path.join(MODEL_DIR, "best_resnet18.pth")
-            torch.save(model.state_dict(), save_path)
+        print(f"Epoch {epoch+1}: Train Loss={train_loss:.4f}, Val Loss={val_loss:.4f}")
+        # save best model
+        if val_loss < best_loss:
+            best_loss = val_loss
+            torch.save(model.state_dict(), f"{MODEL_DIR}/best_resnet50.pth")
 
-    print("Training complete. Best Val Acc: {:.4f}".format(best_acc))
+    print(f"Training complete! Best Val Loss: {best_loss:.4f}")
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     train()

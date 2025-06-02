@@ -1,28 +1,31 @@
-
 import torch
-from sklearn.metrics import classification_report, confusion_matrix
-from config import *
+from sklearn.metrics import mean_absolute_error, mean_squared_error
+from config import MODEL_DIR
 from data_loader import get_dataloaders
-from models.resnet18 import build_resnet18
+from models.resnet18 import build_resnet18_regression
+from utils import get_regression_transform
 
 
-def evaluate(model_path):
-    _, val_loader = get_dataloaders(
-        CSV_FILE, RAW_DIR, BATCH_SIZE, VAL_SPLIT, RANDOM_SEED
-    )
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = build_resnet18(pretrained=False).to(device)
+def evaluate(model_path=None):
+    if model_path is None:
+        model_path = f"{MODEL_DIR}/best_resnet50.pth"
+    train_loader, val_loader = get_dataloaders(transform=get_regression_transform())
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model = build_resnet18_regression(pretrained=False).to(device)
     model.load_state_dict(torch.load(model_path, map_location=device))
     model.eval()
 
-    all_preds, all_labels = [], []
+    y_true, y_pred = [], []
     with torch.no_grad():
-        for images, labels in val_loader:
-            images = images.to(device)
-            outputs = model(images)
-            _, preds = torch.max(outputs, 1)
-            all_preds.extend(preds.cpu().numpy())
-            all_labels.extend(labels.numpy())
+        for imgs, ages in val_loader:
+            imgs = imgs.to(device)
+            outputs = model(imgs).cpu().squeeze().tolist()
+            y_pred.extend(outputs)
+            y_true.extend(ages.tolist())
 
-    print(classification_report(all_labels, all_preds, target_names=["YOUNG", "MIDDLE", "OLD"]))
-    print("Confusion Matrix:\n", confusion_matrix(all_labels, all_preds))
+    mae = mean_absolute_error(y_true, y_pred)
+    mse = mean_squared_error(y_true, y_pred)
+    print(f"Evaluation Results - MAE: {mae:.2f}, RMSE: {mse**0.5:.2f}")
+
+if __name__ == '__main__':
+    evaluate()

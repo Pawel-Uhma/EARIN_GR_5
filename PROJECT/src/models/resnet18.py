@@ -1,10 +1,10 @@
 import torch.nn as nn
 import torchvision.models as models
-from config import NUM_CLASSES
+from config import IMG_SIZE
 
-def build_resnet18(pretrained=True):
+def build_resnet18_regression(pretrained=True):
     model = models.resnet18(pretrained=pretrained)
-    # Replace final layer for classification
-    num_ftrs = model.fc.in_features
-    model.fc = nn.Linear(num_ftrs, NUM_CLASSES)
+    # modify final layer for single-output regression
+    num_features = model.fc.in_features
+    model.fc = nn.Linear(num_features, 1)
     return model
