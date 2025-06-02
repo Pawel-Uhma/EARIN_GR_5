@@ -10,7 +10,7 @@ from utils import set_seed, get_regression_transform
 
 def train():
     set_seed()
-    train_loader, val_loader = get_dataloaders(transform=get_regression_transform())
+    train_loader, val_loader = get_dataloaders()
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = build_resnet18_regression(pretrained=True).to(device)
     criterion = nn.MSELoss()
