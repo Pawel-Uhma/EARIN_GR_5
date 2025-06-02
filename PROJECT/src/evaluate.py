@@ -7,7 +7,7 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error
 from tqdm import tqdm
 from config import MODEL_DIR, IMG_SIZE, BATCH_SIZE, RANDOM_SEED, VAL_SPLIT
 from data_loader import AgeRegressionDataset, get_regression_transform
-from models.resnet50 import build_resnet50_regression
+from models.resnet18 import build_resnet18_regression
 
 
 def evaluate(model_path=None):
@@ -49,7 +49,7 @@ def evaluate(model_path=None):
     print(f"[INFO] Split → Train: {train_size}, Validation: {val_size}\n")
 
     # ─── Model Loading ──────────────────────────────────────────────────
-    model = build_resnet50_regression(pretrained=False).to(device)
+    model = build_resnet18_regression(pretrained=False).to(device)
     print("[INFO] Loading model weights...")
     checkpoint = torch.load(model_path, map_location=device)
     model.load_state_dict(checkpoint)
