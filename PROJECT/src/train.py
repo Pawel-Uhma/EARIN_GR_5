@@ -5,8 +5,7 @@ from tqdm import tqdm
 from config import NUM_EPOCHS, LEARNING_RATE, MODEL_DIR
 from data_loader import get_dataloaders
 from models.resnet18 import build_resnet18_regression
-from utils import set_seed
-
+from utils import set_seed, plot_train_val_loss
 
 def train():
     set_seed()
@@ -17,37 +16,42 @@ def train():
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
     best_loss = float('inf')
-    for epoch in range(NUM_EPOCHS):
+    train_losses, val_losses = [], []
+
+    for epoch in range(1, NUM_EPOCHS + 1):
         model.train()
-        train_loss = 0.0
-        for imgs, ages in tqdm(train_loader, desc=f"Epoch {epoch+1}/{NUM_EPOCHS}" ):
+        running_train = 0.0
+        for imgs, ages in tqdm(train_loader, desc=f"Epoch {epoch}/{NUM_EPOCHS} - Training"):
             imgs, ages = imgs.to(device), ages.to(device).unsqueeze(1)
             optimizer.zero_grad()
             outputs = model(imgs)
             loss = criterion(outputs, ages)
             loss.backward()
             optimizer.step()
-            train_loss += loss.item() * imgs.size(0)
-        train_loss /= len(train_loader.dataset)
+            running_train += loss.item() * imgs.size(0)
+        epoch_train_loss = running_train / len(train_loader.dataset)
+        train_losses.append(epoch_train_loss)
 
-        # validation
         model.eval()
-        val_loss = 0.0
+        running_val = 0.0
         with torch.no_grad():
             for imgs, ages in val_loader:
                 imgs, ages = imgs.to(device), ages.to(device).unsqueeze(1)
                 outputs = model(imgs)
                 loss = criterion(outputs, ages)
-                val_loss += loss.item() * imgs.size(0)
-        val_loss /= len(val_loader.dataset)
+                running_val += loss.item() * imgs.size(0)
+        epoch_val_loss = running_val / len(val_loader.dataset)
+        val_losses.append(epoch_val_loss)
 
-        print(f"Epoch {epoch+1}: Train Loss={train_loss:.4f}, Val Loss={val_loss:.4f}")
-        # save best model
-        if val_loss < best_loss:
-            best_loss = val_loss
+        print(f"Epoch {epoch}: Train Loss={epoch_train_loss:.4f}, Val Loss={epoch_val_loss:.4f}")
+
+        if epoch_val_loss < best_loss:
+            best_loss = epoch_val_loss
             torch.save(model.state_dict(), f"{MODEL_DIR}/best_resnet18.pth")
 
     print(f"Training complete! Best Val Loss: {best_loss:.4f}")
+
+    plot_train_val_loss(train_losses, val_losses)
 
 if __name__ == '__main__':
     train()
