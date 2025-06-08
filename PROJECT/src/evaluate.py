@@ -13,7 +13,7 @@ from utils import plot_predictions_vs_truth, plot_error_distribution
 def evaluate(model_path=None):
     # ─── Model Path ────────────────────────────────────────────────────
     if model_path is None:
-        model_path = os.path.join(MODEL_DIR, "best_resnet50.pth")
+        model_path = os.path.join(MODEL_DIR, "best_resnet18.pth")
     print(f"\n[INFO] Using model path: {model_path}")
 
     # ─── Device Setup ───────────────────────────────────────────────────
