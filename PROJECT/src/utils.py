@@ -5,7 +5,7 @@ import torch
 import matplotlib.pyplot as plt
 from config import RANDOM_SEED
 
-# ─── Seeding ──────────────────────────────────────────────────────────
+# set all random seeds to make results reproducible
 def set_seed():
     random.seed(RANDOM_SEED)
     np.random.seed(RANDOM_SEED)
@@ -13,16 +13,16 @@ def set_seed():
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(RANDOM_SEED)
 
-# ─── Plot directory setup ────────────────────────────────────────────
+# make sure the folder for saving plots exists
 PLOTS_DIR = os.path.join(os.getcwd(), 'plots')
 os.makedirs(PLOTS_DIR, exist_ok=True)
 
-# ─── Predicted vs. True Age Scatter ─────────────────────────────────
+# scatter plot showing predicted ages vs actual ones
 def plot_predictions_vs_truth(y_true, y_pred, filename='pred_vs_true.png'):
     fig, ax = plt.subplots()
     ax.scatter(y_true, y_pred, alpha=0.6, edgecolor='k')
     mn, mx = min(min(y_true), min(y_pred)), max(max(y_true), max(y_pred))
-    ax.plot([mn, mx], [mn, mx], 'r--', linewidth=1)
+    ax.plot([mn, mx], [mn, mx], 'r--', linewidth=1)  # diagonal line for perfect predictions
     ax.set_xlabel('True Age')
     ax.set_ylabel('Predicted Age')
     ax.set_title('Predicted vs. True Age')
@@ -34,7 +34,7 @@ def plot_predictions_vs_truth(y_true, y_pred, filename='pred_vs_true.png'):
     plt.close(fig)
     print(f"[PLOT] Saved scatter plot to {path}")
 
-# ─── Absolute Error Distribution ──────────────────────────────────────
+# histogram showing how far off the predictions were
 def plot_error_distribution(y_true, y_pred, filename='error_dist.png', bins=20):
     errors = np.abs(np.array(y_pred) - np.array(y_true))
     fig, ax = plt.subplots()
@@ -48,7 +48,7 @@ def plot_error_distribution(y_true, y_pred, filename='error_dist.png', bins=20):
     plt.close(fig)
     print(f"[PLOT] Saved error distribution to {path}")
 
-# ─── Training & Validation Loss Curve ─────────────────────────────────
+# line plot showing training and validation loss over time
 def plot_train_val_loss(train_losses, val_losses, filename='loss_curve.png'):
     epochs = range(1, len(train_losses) + 1)
     fig, ax = plt.subplots()
@@ -64,12 +64,12 @@ def plot_train_val_loss(train_losses, val_losses, filename='loss_curve.png'):
     plt.close(fig)
     print(f"[PLOT] Saved loss curve to {path}")
 
-# ─── Residuals vs. True Age Plot ──────────────────────────────────────
+# shows the difference between prediction and true value for each point
 def plot_residuals_vs_true(y_true, y_pred, filename='residuals_vs_true.png'):
     residuals = np.array(y_pred) - np.array(y_true)
     fig, ax = plt.subplots()
     ax.scatter(y_true, residuals, alpha=0.6, edgecolor='k')
-    ax.axhline(0, color='r', linestyle='--')
+    ax.axhline(0, color='r', linestyle='--')  # horizontal line at zero
     ax.set_xlabel('True Age')
     ax.set_ylabel('Residual (Pred - True)')
     ax.set_title('Residuals vs. True Age')
@@ -79,7 +79,7 @@ def plot_residuals_vs_true(y_true, y_pred, filename='residuals_vs_true.png'):
     plt.close(fig)
     print(f"[PLOT] Saved residuals plot to {path}")
 
-# ─── True Age Distribution Histogram ─────────────────────────────────
+# histogram showing how often each true age appears in the dataset
 def plot_true_age_distribution(y_true, filename='true_age_dist.png', bins=20):
     fig, ax = plt.subplots()
     ax.hist(y_true, bins=bins, edgecolor='black')
@@ -92,17 +92,15 @@ def plot_true_age_distribution(y_true, filename='true_age_dist.png', bins=20):
     plt.close(fig)
     print(f"[PLOT] Saved true age distribution to {path}")
 
-# ─── Binned Error Boxplot ─────────────────────────────────────────────
+# boxplot showing how error changes across different age groups
 def plot_error_by_age_bin(y_true, y_pred, bins=10, filename='error_by_age_bin.png'):
     ages = np.array(y_true)
     errors = np.abs(np.array(y_pred) - ages)
-    # Create age bins
     bin_edges = np.linspace(ages.min(), ages.max(), bins + 1)
     bin_indices = np.digitize(ages, bin_edges) - 1
-    # Prepare data
     data = [errors[bin_indices == i] for i in range(bins)]
     labels = [f"{int(bin_edges[i])}-{int(bin_edges[i+1])}" for i in range(bins)]
-    # Plot
+
     fig, ax = plt.subplots(figsize=(10, 6))
     ax.boxplot(data, labels=labels, showfliers=False)
     ax.set_xlabel('Age Bins')
