@@ -1,8 +1,9 @@
+import os
 import random
 import numpy as np
 import torch
-from torchvision import transforms
-from config import IMG_SIZE, RANDOM_SEED
+import matplotlib.pyplot as plt
+from config import RANDOM_SEED
 
 def set_seed():
     random.seed(RANDOM_SEED)
@@ -12,9 +13,35 @@ def set_seed():
         torch.cuda.manual_seed_all(RANDOM_SEED)
 
 
-def get_regression_transform():
-    return transforms.Compose([
-        transforms.Resize((IMG_SIZE, IMG_SIZE)),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485,0.456,0.406], std=[0.229,0.224,0.225])
-    ])
+PLOTS_DIR = os.path.join(os.getcwd(), "plots")
+os.makedirs(PLOTS_DIR, exist_ok=True)
+
+def plot_predictions_vs_truth(y_true, y_pred, filename="pred_vs_true.png"):
+    fig, ax = plt.subplots()
+    ax.scatter(y_true, y_pred, alpha=0.6, edgecolor='k')
+    mn = min(min(y_true), min(y_pred))
+    mx = max(max(y_true), max(y_pred))
+    ax.plot([mn, mx], [mn, mx], 'r--', linewidth=1)
+    ax.set_xlabel("True Age")
+    ax.set_ylabel("Predicted Age")
+    ax.set_title("Predicted vs. True Age")
+    ax.set_xlim(mn, mx)
+    ax.set_ylim(mn, mx)
+    fig.tight_layout()
+    out_path = os.path.join(PLOTS_DIR, filename)
+    fig.savefig(out_path)
+    plt.close(fig)
+    print(f"[PLOT] Saved predictions vs. truth to {out_path}")
+
+def plot_error_distribution(y_true, y_pred, filename="error_dist.png", bins=20):
+    errors = np.abs(np.array(y_pred) - np.array(y_true))
+    fig, ax = plt.subplots()
+    ax.hist(errors, bins=bins, edgecolor='black')
+    ax.set_xlabel("Absolute Error (years)")
+    ax.set_ylabel("Frequency")
+    ax.set_title("Distribution of Absolute Errors")
+    fig.tight_layout()
+    out_path = os.path.join(PLOTS_DIR, filename)
+    fig.savefig(out_path)
+    plt.close(fig)
+    print(f"[PLOT] Saved error distribution to {out_path}")

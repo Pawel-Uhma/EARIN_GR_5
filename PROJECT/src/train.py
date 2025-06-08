@@ -5,7 +5,7 @@ from tqdm import tqdm
 from config import NUM_EPOCHS, LEARNING_RATE, MODEL_DIR
 from data_loader import get_dataloaders
 from models.resnet18 import build_resnet18_regression
-from utils import set_seed, get_regression_transform
+from utils import set_seed
 
 
 def train():
@@ -45,7 +45,7 @@ def train():
         # save best model
         if val_loss < best_loss:
             best_loss = val_loss
-            torch.save(model.state_dict(), f"{MODEL_DIR}/best_resnet50.pth")
+            torch.save(model.state_dict(), f"{MODEL_DIR}/best_resnet18.pth")
 
     print(f"Training complete! Best Val Loss: {best_loss:.4f}")
 

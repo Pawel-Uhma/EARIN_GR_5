@@ -1,6 +1,5 @@
 import torch.nn as nn
 import torchvision.models as models
-from config import IMG_SIZE
 
 def build_resnet18_regression(pretrained=True):
     model = models.resnet18(pretrained=pretrained)

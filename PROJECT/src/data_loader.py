@@ -1,5 +1,3 @@
-# data_loader.py
-
 import os
 import torch
 from torch.utils.data import Dataset, DataLoader, random_split
@@ -19,18 +17,14 @@ class AgeRegressionDataset(Dataset):
                 continue
 
             parts = fname.split('_', 3)
-            # We expect at least: age, gender, race, rest_of_name
             if len(parts) < 4:
-                # Skip any file that doesn't follow the expected naming
                 continue
 
-            # Try to parse age, gender, race
             try:
                 age = float(parts[0])
-                gender = int(parts[1])   # 0 or 1
-                race   = int(parts[2])   # 0–4
+                gender = int(parts[1])   
+                race   = int(parts[2])   
             except ValueError:
-                # Skip if any of the first three parts are not integers
                 continue
 
             path = os.path.join(image_dir, fname)
@@ -51,10 +45,6 @@ class AgeRegressionDataset(Dataset):
 
 
 def get_regression_transform():
-    """
-    Basic transform: resize to IMG_SIZE × IMG_SIZE, convert to tensor,
-    normalize with ImageNet statistics.
-    """
     return transforms.Compose([
         transforms.Resize((IMG_SIZE, IMG_SIZE)),
         transforms.ToTensor(),
@@ -64,22 +54,15 @@ def get_regression_transform():
 
 
 def get_dataloaders():
-    """
-    Build DataLoader objects for training and validation splits.
-    Splits the dataset by VAL_SPLIT fraction.
-    """
-    # Instantiate full dataset with transforms
     full_dataset = AgeRegressionDataset(
         image_dir=IMAGE_DIR,
         transform=get_regression_transform()
     )
 
-    # Compute sizes
     total_len = len(full_dataset)
     val_len   = int(total_len * VAL_SPLIT)
     train_len = total_len - val_len
 
-    # Perform reproducible split
     train_ds, val_ds = random_split(
         full_dataset,
         [train_len, val_len],
