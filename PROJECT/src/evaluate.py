@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from tqdm import tqdm
 from config import MODEL_DIR, IMAGE_DIR, BATCH_SIZE, RANDOM_SEED, VAL_SPLIT
-from data_loader import AgeRegressionDataset, get_regression_transform
+from data_loader import AgeRegressionDataset, get_train_transform
 from models.resnet18 import build_resnet18_regression
 from utils import *
 
@@ -20,7 +20,7 @@ def evaluate(model_path=None):
     print(f"[INFO] Running evaluation on device: {device}")
 
     # get validation set using the same transform as training
-    transform = get_regression_transform()
+    transform = get_train_transform()
     full_dataset = AgeRegressionDataset(
         image_dir=IMAGE_DIR,
         transform=transform
