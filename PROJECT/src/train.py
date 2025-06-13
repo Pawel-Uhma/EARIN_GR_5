@@ -4,7 +4,7 @@ import torch.optim as optim
 from tqdm import tqdm
 from config import NUM_EPOCHS, LEARNING_RATE, MODEL_DIR
 from data_loader import get_dataloaders
-from models.resnet18 import build_resnet18_regression
+from models.resnet import build_resnet_regression
 from utils import set_seed, plot_train_val_loss
 
 
@@ -19,7 +19,7 @@ def train():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     # load a resnet18 model and move to correct device
-    model = build_resnet18_regression(pretrained=True).to(device)
+    model = build_resnet_regression(pretrained=True).to(device)
 
     # standard regression loss and optimizer
     criterion = nn.MSELoss()

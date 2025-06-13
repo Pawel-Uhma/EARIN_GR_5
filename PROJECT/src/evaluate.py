@@ -5,14 +5,14 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error
 from tqdm import tqdm
 from config import MODEL_DIR, IMAGE_DIR, BATCH_SIZE, RANDOM_SEED, VAL_SPLIT
 from data_loader import AgeRegressionDataset, get_train_transform
-from models.resnet18 import build_resnet18_regression
+from models.resnet import build_resnet_regression
 from utils import *
 
 
 def evaluate(model_path=None):
     # if no model path is passed, use the default best model path
     if model_path is None:
-        model_path = os.path.join(MODEL_DIR, "best_resnet18.pth")
+        model_path = os.path.join(MODEL_DIR, "best_resnet.pth")
     print(f"\n[INFO] Using model path: {model_path}")
 
     # set device to gpu if available, else cpu
@@ -50,7 +50,7 @@ def evaluate(model_path=None):
     print(f"[INFO] Total samples: {total_samples} (Train: {train_size}, Val: {val_size})\n")
 
     # build the model and load saved weights
-    model = build_resnet18_regression(pretrained=False).to(device)
+    model = build_resnet_regression(pretrained=False).to(device)
     checkpoint = torch.load(model_path, map_location=device)
     model.load_state_dict(checkpoint)
     model.eval()

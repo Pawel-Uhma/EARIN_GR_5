@@ -1,9 +1,13 @@
 import torch.nn as nn
 import torchvision.models as models
+from config import RESNET
 
-def build_resnet18_regression(pretrained=True):
-    # load resnet18
-    model = models.resnet50(pretrained=pretrained)
+def build_resnet_regression(pretrained=True):
+    # load resnet
+    if RESNET == 18:
+        model = models.resnet18(pretrained=pretrained)
+    else: #50
+        model = models.resnet50(pretrained=pretrained)
     
     # the original last layer is for classification (usually 1000 classes),
     # but we only want to predict a single continuous value (age), so we replace it
